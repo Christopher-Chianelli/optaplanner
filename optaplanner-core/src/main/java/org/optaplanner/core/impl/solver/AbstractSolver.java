@@ -16,12 +16,16 @@
 
 package org.optaplanner.core.impl.solver;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.event.SolverEventListener;
+import org.optaplanner.core.impl.heuristic.move.Move;
 import org.optaplanner.core.impl.partitionedsearch.PartitionSolver;
 import org.optaplanner.core.impl.phase.Phase;
 import org.optaplanner.core.impl.phase.event.PhaseLifecycleListener;
@@ -55,6 +59,7 @@ public abstract class AbstractSolver<Solution_> implements Solver<Solution_> {
     // Note that the DefaultSolver.basicPlumbingTermination is a component of this termination
     protected final Termination termination;
     protected final List<Phase<Solution_>> phaseList;
+    protected final Collection<Consumer<Move<Solution_>>> moveEventListeners;
 
     // ************************************************************************
     // Constructors and simple getters/setters
@@ -69,6 +74,7 @@ public abstract class AbstractSolver<Solution_> implements Solver<Solution_> {
         for (Phase<Solution_> phase : phaseList) {
             phase.setSolverPhaseLifecycleSupport(phaseLifecycleSupport);
         }
+        moveEventListeners = new ArrayList<>();
     }
 
     // ************************************************************************
@@ -76,6 +82,9 @@ public abstract class AbstractSolver<Solution_> implements Solver<Solution_> {
     // ************************************************************************
 
     public void solvingStarted(DefaultSolverScope<Solution_> solverScope) {
+        // It is safe to call addMoveListener with the same listener multiple times;
+        // it will only add the listener once.
+        moveEventListeners.forEach(l -> solverScope.getScoreDirector().addMoveListener(l));
         solverScope.setWorkingSolutionFromBestSolution();
         bestSolutionRecaller.solvingStarted(solverScope);
         termination.solvingStarted(solverScope);
@@ -124,6 +133,11 @@ public abstract class AbstractSolver<Solution_> implements Solver<Solution_> {
     @Override
     public void removeEventListener(SolverEventListener<Solution_> eventListener) {
         solverEventSupport.removeEventListener(eventListener);
+    }
+    
+    @Override
+    public void addMoveListener(Consumer<Move<Solution_>> listener) {
+        moveEventListeners.add(listener);
     }
 
     /**

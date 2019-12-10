@@ -58,6 +58,8 @@ public interface InnerScoreDirector<Solution_> extends ScoreDirector<Solution_> 
      * @param moveProcessor never null, use this to store the score as well as call the acceptor and forager
      */
     void doAndProcessMove(Move<Solution_> move, boolean assertMoveScoreFromScratch, Consumer<Score> moveProcessor);
+    
+    void addMoveListener(Consumer<Move<Solution_>> listener);
 
     /**
      * @param expectedWorkingEntityListRevision an

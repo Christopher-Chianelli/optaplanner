@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -73,6 +74,7 @@ public abstract class AbstractScoreDirector<Solution_, Factory_ extends Abstract
     protected final LookUpManager lookUpManager;
     protected boolean constraintMatchEnabledPreference;
     protected final VariableListenerSupport<Solution_> variableListenerSupport;
+    protected final Collection<Consumer<Move<Solution_>>> moveListeners;
 
     protected Solution_ workingSolution;
     protected long workingEntityListRevision = 0L;
@@ -91,6 +93,7 @@ public abstract class AbstractScoreDirector<Solution_, Factory_ extends Abstract
         this.constraintMatchEnabledPreference = constraintMatchEnabledPreference;
         variableListenerSupport = new VariableListenerSupport<>(this);
         variableListenerSupport.linkVariableListeners();
+        moveListeners = new HashSet<>();
     }
 
     @Override
@@ -154,6 +157,11 @@ public abstract class AbstractScoreDirector<Solution_, Factory_ extends Abstract
     public SupplyManager getSupplyManager() {
         return variableListenerSupport;
     }
+    
+    @Override
+    public void addMoveListener(Consumer<Move<Solution_>> listener) {
+        moveListeners.add(listener);
+    }
 
     // ************************************************************************
     // Complex methods
@@ -174,6 +182,7 @@ public abstract class AbstractScoreDirector<Solution_, Factory_ extends Abstract
     @Override
     public Score doAndProcessMove(Move<Solution_> move, boolean assertMoveScoreFromScratch) {
         Move<Solution_> undoMove = move.doMove(this);
+        moveListeners.forEach(l -> l.accept(move));
         Score score = calculateScore();
         if (assertMoveScoreFromScratch) {
             assertWorkingScoreFromScratch(score, move);
@@ -185,6 +194,7 @@ public abstract class AbstractScoreDirector<Solution_, Factory_ extends Abstract
     @Override
     public void doAndProcessMove(Move<Solution_> move, boolean assertMoveScoreFromScratch, Consumer<Score> moveProcessor) {
         Move<Solution_> undoMove = move.doMove(this);
+        moveListeners.forEach(l -> l.accept(move));
         Score score = calculateScore();
         if (assertMoveScoreFromScratch) {
             assertWorkingScoreFromScratch(score, move);

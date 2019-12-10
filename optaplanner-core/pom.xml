@@ -10,6 +10,7 @@
   </parent>
 
   <artifactId>optaplanner-core</artifactId>
+  <version>MEMORY-LEAK</version>
   <packaging>bundle</packaging><!-- bundle = jar + OSGi metadata -->
 
   <name>OptaPlanner core</name>
@@ -113,10 +114,10 @@
           </instructions>
         </configuration>
       </plugin>
-      <plugin>
+      <!--  <plugin>
         <groupId>org.revapi</groupId>
         <artifactId>revapi-maven-plugin</artifactId>
-      </plugin>
+      </plugin> -->
     </plugins>
   </build>
 
